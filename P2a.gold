@@ -1,0 +1,29 @@
+using gold.**
+  
+         
+  
+var A
+var B
+
+procedure main(args:String[]) begin
+	var sc:java.util.Scanner(System.$in)
+	A = ('a'‥'z')
+    B = ('a'‥'z')
+	Coder:=createCoder()
+   	DeCoder:=createDecoder()
+	
+end
+   	
+function createCoder():ITransducer begin
+	Q:={⟨d,l,pos⟩|d in {2,3,5}, l in ('a'‥'z'),pos in (0‥4)∪{"  "}}
+	∑ :=('a'‥'z')∪{"  "}∪{'$'}
+	Σ´:=Σ∪{'#'}∪('a'‥'z')∪('0'‥'4')
+	q0 :=
+	return GDeterministicTransducer()
+	
+end
+
+function createDecoder():ITransducer begin
+	
+	GDeterministicTransducer()
+end
