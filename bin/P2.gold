@@ -1,0 +1,157 @@
+using gold.**
+  
+         
+  
+
+
+procedure main(args:String[]) begin
+	var sc:java.util.Scanner(System.$in)
+	
+	Coder:=createCoder()
+   	DeCoder:=createDecoder()
+   	Utilities.testCodeDecode(Coder,DeCoder)
+	
+end
+   	
+function createCoder():ITransducer begin
+	Q:={⟨d,l,pos,count,text⟩ | d in ('a'‥'z'), l in ('a'‥'z'),0 <= pos < 3,0 <= count < 5,text in ('a'‥'z')} ∪ ('a'‥'z')∪{"S","E"} ∪ ('a'‥'z') × ('a'‥'z') ∪ ('a'‥'z') × ('a'‥'z') × (0‥2) ∪ ('a'‥'z') × ('a'‥'z') × (0‥2) × (0‥4)
+	Σ :=('a'‥'z')∪{" "}∪{'$'}
+	Σ´:=Σ∪{'#'}∪('a'‥'z')∪('0'‥'4')
+	q0 := "S"
+	F:=  {⟨d,l,pos,count,text⟩ | d in ('a'‥'z'), l in ('a'‥'z'),0<= pos < 3,0<= count < 5,text in ('a'‥'z')}
+	
+	
+	return GDeterministicTransducer(Q, Σ, Σ´, q0, F, auxiliar1, auxiliar2, auxiliar3)
+	
+end
+function auxiliar1(estado, input) begin
+	if estado="S"   and input in ("a"‥"z") then return input
+	elseif estado in ("a"‥"z") and input in ("a"‥"z") then return ⟨estado, input⟩ 
+	elseif |estado| = 2 and input =" " then return ⟨estado[0], estado[1], 1⟩
+	elseif |estado| = 3 and input in ("a"‥"z")  then return ⟨estado[0], estado[1], estado[2], 1⟩
+	elseif |estado|= 4 and  input in ("a"‥"z")  then d,l,pos, count:= estado[0], estado[1], estado[2], 1 return ⟨d,l,(pos+1)%3,1, count⟩
+	elseif |estado|= 5 and  input in ("a"‥"z")  then d,l,pos,text, count:= estado[0], estado[1], estado[2], estado[3], input
+		if (d= input) or (l = input) then return ⟨d,l,(pos+1)%3,(count+1)%5, text⟩			
+		else return ⟨d,l,(pos+1)%3,(count), text⟩
+			
+		end
+	elseif |estado| = 5 and input ="$" then return ⟨estado[0], estado[1], estado[2], estado[3], estado[4]⟩
+	
+	
+	else return "E"
+	end
+end
+function auxiliar2(estado, input) begin
+	if ((estado ="S") or (estado in ("a"‥"z"))) and input in ("a"‥"z") then return input
+	elseif estado in ("a"‥"z")∪{"S","E"}  then return λ
+	elseif |estado| =3 and input in ("a"‥"z") then d, l, pos = estado[0], estado[1], estado[2]
+		if d =input then return l
+		elseif l= input then return d
+		else return input	
+		end
+	elseif |estado| = 4 and input in ("a"‥"z") then d, l, pos, texto = estado[0], estado[1], estado[2], estado[4]
+		if d =input then return l
+		elseif l= input then return d
+		elseif texto = input then return "#" 
+		elseif pos+1 = 1 and input≠texto then return Verify(Mayuscula(input), 1)
+		elseif pos+1 =2 and input≠texto  then return Mayuscula(input,1 )
+		else return input
+		end
+	elseif |estado| =5 and input = "$" then return estado[4]
+	else return λ
+	end
+	
+end
+
+function auxiliar3(d) begin
+	return λ
+	end
+
+function createDecoder():ITransducer begin
+	Q:={⟨t,m,pos⟩ | t in {2,3,5}, m in ('a'‥'z'),pos in (0‥4)∪{" "}} ∪  {2,3,5,"S","E"}
+	Σ :=('a'‥'z')∪{" "}
+	Σ´:=Σ∪{'#'}
+	q0 := "S"
+	F:={⟨t,m,pos⟩ | t in {2,3,5}, m in ('a'‥'z'),0<=pos<5}
+	
+	
+	return GDeterministicTransducer(Q, Σ, Σ´, q0, F, auxiliar3, auxiliar4, auxiliar5)
+end
+
+function auxiliar4(estado, input) begin
+	if estado = "S" and input in{2,3,5} then return input-"0"
+	elseif estado in {2,3,5} and input in ("a"‥"z") then return ⟨estado, input,"_"⟩ 
+	else return "S"
+		
+	end
+end
+//opcion 2
+function auxiliar4(⟨t,m,pos⟩,input) begin
+	if pos = "_" and input =":" then return ⟨t,m,1⟩
+	elseif pos = "_" then return "E"
+	elseif pos!=0 and input = "#" then return "E"
+	elseif pos =0 and input = m then return "E"
+	elseif input in ("a"‥"z")∪{"#"} then return ⟨t,m,(pos+1)%t⟩
+	else return "E"
+	end
+end
+
+function auxiliar5(estado, input) begin
+	if estado="S" and input in {"2","3","5"} then return input-"0"
+	elseif estado in {2,3,5} and input in ("a"‥"z") then return input
+	else return λ	
+	end
+end
+//option 2
+function auxiliar5(⟨t,m,pos⟩,input) begin
+	if pos = "_" and input =":" then return input
+	elseif input ="#" and pos = 0 then return m
+	elseif input in ("a"‥"z") and pos = 1 then return Verify(input, -t)
+	elseif input in ("a"‥"z") then return input
+	else return λ	
+		
+	end
+	
+end
+
+function Verify(Caracter, Value) begin
+	var aux: Character
+	if Caracter in ("a"‥"z") then r:= "a" + (Caracter-"a"+Value)%26
+	elseif Caracter in ("a"‥"z") then	r:= "A"+(Caracter-"A"+ Value)%26
+	elseif Caracter in("0"‥"9") then r:= 0+(Caracter-"0"+ Value)%10
+
+	end
+end
+ function Mayuscula(Caracter) begin
+ 	if Caracter = 'a' then return 'A'
+ 	elseif Caracter = 'b' then return 'B'
+    elseif Caracter = 'c' then return 'C'
+    elseif Caracter = 'd' then return 'D'
+    elseif Caracter = 'e' then return 'E'
+    elseif Caracter = 'f' then return 'F'
+    elseif Caracter = 'g' then return 'G'
+    elseif Caracter = 'h' then return 'H'
+    elseif Caracter = 'i' then return 'I'
+    elseif Caracter = 'j' then return 'J'
+    elseif Caracter = 'k' then return 'K'
+    elseif Caracter = 'l' then return 'L'
+    elseif Caracter = 'm' then return 'M'
+    elseif Caracter = 'n' then return 'N'
+    elseif Caracter = 'ñ' then return 'Ñ'
+    elseif Caracter = 'o' then return 'O'
+    elseif Caracter = 'p' then return 'P'
+    elseif Caracter = 'q' then return 'Q'
+    elseif Caracter = 'r' then return 'R'
+    elseif Caracter= 's' then return 'S'
+    elseif Caracter = 't' then return 'T'
+    elseif Caracter = 'u' then return 'U'
+    elseif Caracter = 'v' then return 'V'
+    elseif Caracter = 'w' then return 'W'
+    elseif Caracter = 'x' then return 'X'
+    elseif Caracter = 'y' then return 'Y'
+    elseif Caracter = 'z' then return 'Z'
+
+    end
+ 	
+ end
+	
